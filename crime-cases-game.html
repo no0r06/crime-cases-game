@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Detective | Crime Case Solver</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-black: #0a0a0f;
+            --secondary-black: #121218;
+            --accent-red: #c1121f;
+            --accent-purple: #6a00f4;
+            --accent-blue: #0077b6;
+            --accent-dark-purple: #3a0ca3;
+            --text-light: #e0e0e0;
+            --text-gray: #8a8a9e;
+            --card-bg: #1a1a25;
+            --card-border: #2a2a3a;
+            --success-green: #4cc9f0;
+            --warning-orange: #f8961e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Raleway', sans-serif;
+            background-color: var(--primary-black);
+            color: var(--text-light);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(58, 12, 163, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(193, 18, 31, 0.1) 0%, transparent 20%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .floating-points {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-point {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background-color: var(--accent-purple);
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.3;
+            }
+            25% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0.7;
+            }
+            50% {
+                transform: translateY(-50px) translateX(-50px);
+                opacity: 0.5;
+            }
+            75% {
+                transform: translateY(-150px) translateX(50px);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.3;
+            }
+        }
+
+        header {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            background: linear-gradient(135deg, var(--secondary-black) 0%, rgba(26, 26, 37, 0.9) 100%);
+            border-bottom: 2px solid var(--accent-purple);
+            position: relative;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-red), var(--accent-purple), var(--accent-blue), transparent);
+            animation: headerGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes headerGlow {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-purple), var(--accent-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 15px rgba(106, 0, 244, 0.3);
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: var(--text-gray);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: rgba(26, 26, 37, 0.7);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(106, 0, 244, 0.2);
+        }
+
+        .stat i {
+            color: var(--accent-purple);
+            font-size: 1.2rem;
+        }
+
+        .difficulty-filters {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Raleway', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .difficulty-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(106, 0, 244, 0.4);
+        }
+
+        .difficulty-btn.easy {
+            background: linear-gradient(135deg, #1a5a1a, #2e7d32);
+            color: white;
+        }
+
+        .difficulty-btn.medium {
+            background: linear-gradient(135deg, #b85c00, #f57c00);
+            color: white;
+        }
+
+        .difficulty-btn.hard {
+            background: linear-gradient(135deg, #7a003a, #c2185b);
+            color: white;
+        }
+
+        .difficulty-btn.all {
+            background: linear-gradient(135deg, var(--accent-dark-purple), var(--accent-blue));
+            color: white;
+        }
+
+        /* Main Menu Styling */
+        #mainMenu {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            z-index: 2;
+            position: relative;
+        }
+
+        .cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .case-preview-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .case-preview-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(106, 0, 244, 0.2);
+            border-color: var(--accent-purple);
+        }
+
+        .case-preview-card.solved {
+            border-color: var(--success-green);
+        }
+
+        .case-number {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .case-preview-title {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .case-preview-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .case-difficulty-preview {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .case-difficulty-preview.easy {
+            background-color: rgba(46, 125, 50, 0.2);
+            color: #4caf50;
+            border: 1px solid #2e7d32;
+        }
+
+        .case-difficulty-preview.medium {
+            background-color: rgba(245, 124, 0, 0.2);
+            color: #ff9800;
+            border: 1px solid #f57c00;
+        }
+
+        .case-difficulty-preview.hard {
+            background-color: rgba(194, 24, 91, 0.2);
+            color: #f06292;
+            border: 1px solid #c2185b;
+        }
+
+        .solved-indicator {
+            color: var(--success-green);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        /* Case Detail View */
+        #caseDetailView {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            display: none;
+            z-index: 2;
+            position: relative;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-blue);
+            background: rgba(0, 119, 182, 0.1);
+            border: 1px solid var(--accent-blue);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: rgba(0, 119, 182, 0.2);
+            transform: translateX(-3px);
+        }
+
+        .case-detail-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .case-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--card-border);
+            position: relative;
+            background: linear-gradient(135deg, rgba(26, 26, 37, 0.9) 0%, rgba(42, 42, 58, 0.9) 100%);
+        }
+
+        .case-header::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-purple), var(--accent-blue));
+            opacity: 0.5;
+        }
+
+        .case-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .case-title h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            color: var(--text-light);
+            flex: 1;
+        }
+
+        .case-difficulty {
+            font-size: 0.9rem;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .case-description {
+            color: var(--text-gray);
+            line-height: 1.7;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+
+        .case-body {
+            padding: 2rem;
+        }
+
+        .case-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+            color: var(--accent-blue);
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .section-title i {
+            font-size: 1.3rem;
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.2rem;
+            background: rgba(42, 42, 58, 0.5);
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-purple);
+            transition: transform 0.3s;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(5px);
+        }
+
+        .timeline-time {
+            font-weight: 700;
+            color: var(--accent-red);
+            min-width: 90px;
+            font-size: 1.1rem;
+        }
+
+        .timeline-event {
+            color: var(--text-light);
+            font-size: 1.05rem;
+            flex: 1;
+        }
+
+        .suspects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .suspect {
+            padding: 1.2rem;
+            background: rgba(42, 42, 58, 0.5);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .suspect:hover {
+            border-color: var(--accent-blue);
+            background: rgba(0, 119, 182, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .suspect.selected {
+            border-color: var(--success-green);
+            background: rgba(76, 201, 240, 0.1);
+            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.2);
+        }
+
+        .suspect-emoji {
+            font-size: 2rem;
+        }
+
+        .suspect-info h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+            color: var(--text-light);
+        }
+
+        .suspect-info p {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            line-height: 1.4;
+        }
+
+        .clues-section {
+            background: rgba(42, 42, 58, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .clue-counter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .clue-counter span {
+            font-size: 1rem;
+            color: var(--text-gray);
+        }
+
+        .clues-revealed {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            min-height: 80px;
+        }
+
+        .clue-item {
+            padding: 1rem 1.2rem;
+            background: rgba(58, 12, 163, 0.2);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-purple);
+            color: var(--text-light);
+            font-size: 1rem;
+            animation: clueReveal 0.5s ease-out;
+        }
+
+        @keyframes clueReveal {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .case-actions {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Raleway', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            font-size: 1rem;
+            flex: 1;
+        }
+
+        .btn-clue {
+            background: linear-gradient(135deg, var(--accent-dark-purple), var(--accent-purple));
+            color: white;
+        }
+
+        .btn-clue:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(106, 0, 244, 0.3);
+        }
+
+        .btn-clue:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-solve {
+            background: linear-gradient(135deg, var(--accent-red), #9d0208);
+            color: white;
+        }
+
+        .btn-solve:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(193, 18, 31, 0.3);
+        }
+
+        .btn-solve:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            margin-top: 2.5rem;
+            padding: 2rem;
+            border-radius: 12px;
+            background: rgba(42, 42, 58, 0.5);
+            border: 2px solid var(--card-border);
+            display: none;
+            animation: resultReveal 0.6s ease-out;
+        }
+
+        @keyframes resultReveal {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-correct {
+            border-color: var(--success-green);
+            background: rgba(76, 201, 240, 0.1);
+        }
+
+        .result-incorrect {
+            border-color: var(--warning-orange);
+            background: rgba(248, 150, 30, 0.1);
+        }
+
+        .result-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .result-title.correct {
+            color: var(--success-green);
+        }
+
+        .result-title.incorrect {
+            color: var(--warning-orange);
+        }
+
+        .result-explanation {
+            color: var(--text-light);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .final-clue {
+            padding: 1.2rem;
+            background: rgba(193, 18, 31, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-red);
+            margin-top: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .solved-badge {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: var(--success-green);
+            color: var(--primary-black);
+            padding: 0.5rem 1.2rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: none;
+            animation: badgePulse 2s infinite;
+            z-index: 1;
+        }
+
+        @keyframes badgePulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 201, 240, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(76, 201, 240, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 201, 240, 0); }
+        }
+
+        .case-detail-card.solved .solved-badge {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--card-border);
+            margin-top: 2rem;
+            background: rgba(26, 26, 37, 0.8);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .cases-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .case-preview-card {
+                padding: 1.2rem;
+            }
+            
+            .case-title h2 {
+                font-size: 1.6rem;
+            }
+            
+            .suspects-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .case-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                padding: 0.9rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .difficulty-filters {
+                gap: 0.5rem;
+            }
+            
+            .difficulty-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .case-header {
+                padding: 1.5rem;
+            }
+            
+            .case-body {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Background Points -->
+    <div class="floating-points" id="floatingPoints"></div>
+
+    <!-- Header Section -->
+    <header>
+        <h1><i class="fas fa-search"></i> DARK DETECTIVE</h1>
+        <p class="subtitle">Solve 30 mysterious crime cases. Test your deduction skills.</p>
+        
+        <div class="stats-bar">
+            <div class="stat">
+                <i class="fas fa-crimes"></i>
+                <span>Total Cases: <strong id="totalCases">30</strong></span>
+            </div>
+            <div class="stat">
+                <i class="fas fa-check-circle"></i>
+                <span>Solved: <strong id="solvedCases">0</strong></span>
+            </div>
+            <div class="stat">
+                <i class="fas fa-brain"></i>
+                <span>Success Rate: <strong id="successRate">0%</strong></span>
+            </div>
+        </div>
+        
+        <div class="difficulty-filters">
+            <button class="difficulty-btn all active" data-difficulty="all">All Cases</button>
+            <button class="difficulty-btn easy" data-difficulty="easy">Easy (10)</button>
+            <button class="difficulty-btn medium" data-difficulty="medium">Medium (10)</button>
+            <button class="difficulty-btn hard" data-difficulty="hard">Hard (10)</button>
+        </div>
+    </header>
+
+    <!-- Main Menu (Case List) -->
+    <main id="mainMenu">
+        <div class="cases-grid" id="casesGrid">
+            <!-- Cases will be loaded here -->
+        </div>
+    </main>
+
+    <!-- Case Detail View -->
+    <div id="caseDetailView">
+        <div class="back-button" id="backToMenu">
+            <i class="fas fa-arrow-left"></i> Back to Cases
+        </div>
+        <div class="case-detail-card" id="caseDetailCard">
+            <!-- Case details will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>Dark Detective Crime Case Solver &copy; 2023 | Private Game for Detectives</p>
+        <p><i class="fas fa-lock"></i> All case data is stored locally in your browser</p>
+    </footer>
+
+    <script>
+        // Generate floating background points
+        function createFloatingPoints() {
+            const container = document.getElementById('floatingPoints');
+            const pointCount = 80;
+            
+            for (let i = 0; i < pointCount; i++) {
+                const point = document.createElement('div');
+                point.className = 'floating-point';
+                
+                point.style.left = `${Math.random() * 100}%`;
+                point.style.top = `${Math.random() * 100}%`;
+                point.style.animationDelay = `${Math.random() * 20}s`;
+                
+                const size = 2 + Math.random() * 4;
+                point.style.width = `${size}px`;
+                point.style.height = `${size}px`;
+                
+                container.appendChild(point);
+            }
+        }
+
+        // Game data - 30 FULL crime cases
+        const crimeCases = [
+            // ========== EASY CASES (1-10) ==========
+            {
+                id: 1,
+                title: "The Vanished Heirloom",
+                difficulty: "easy",
+                description: "A priceless family diamond ring disappeared during a dinner party. The host insists it was stolen, but there are no signs of forced entry.",
+                timeline: [
+                    { time: "7:00 PM", event: "Guests arrive for dinner party" },
+                    { time: "7:30 PM", event: "Host shows the diamond ring to guests" },
+                    { time: "8:15 PM", event: "Power outage for 2 minutes" },
+                    { time: "9:00 PM", event: "Ring noticed missing from display case" },
+                    { time: "9:05 PM", event: "All guests searched, ring not found" }
+                ],
+                suspects: [
+                    { id: 1, name: "Victoria Sterling", relation: "Host's sister", motive: "Jealousy over inheritance", emoji: "👩‍🦳" },
+                    { id: 2, name: "James Butler", relation: "Family butler", motive: "Financial difficulties", emoji: "👨‍💼" },
+                    { id: 3, name: "Megan Carter", relation: "Guest & jewelry appraiser", motive: "Professional interest", emoji: "👩‍🔬" },
+                    { id: 4, name: "Robert Finch", relation: "Electrician fixing lights", motive: "Opportunity during outage", emoji: "👨‍🔧" },
+                    { id: 5, name: "Linda Park", relation: "Guest & rival collector", motive: "Wanted ring for collection", emoji: "👩‍🎨" },
+                    { id: 6, name: "David Chen", relation: "Catering staff", motive: "Needed money for sick mother", emoji: "👨‍🍳" }
+                ],
+                clues: [
+                    "The display case lock was not tampered with",
+                    "Only one person was alone in the room during the power outage",
+                    "Security footage shows someone pocketing a small object",
+                    "A receipt for expensive medication was found in the trash",
+                    "The ring was insured for $500,000"
+                ],
+                correctSuspectId: 6,
+                explanation: "David Chen took the ring during the power outage. The receipt for his mother's expensive medication and his financial need were the key clues. Security footage confirmed he pocketed something small right after lights came back.",
+                solved: false
+            },
+            {
+                id: 2,
+                title: "Midnight Museum Mystery",
+                difficulty: "easy",
+                description: "An ancient Egyptian artifact was stolen from the museum overnight. The security system was disabled from inside.",
+                timeline: [
+                    { time: "10:00 PM", event: "Museum closes, security system activated" },
+                    { time: "11:30 PM", event: "Security guard completes patrol" },
+                    { time: "1:15 AM", event: "Security system disabled internally" },
+                    { time: "1:30 AM", event: "Alarm triggers on artifact display" },
+                    { time: "2:00 AM", event: "Police arrive, artifact gone" }
+                ],
+                suspects: [
+                    { id: 1, name: "Security Guard Miller", relation: "Night guard", motive: "Gambling debts", emoji: "👮" },
+                    { id: 2, name: "Dr. Eleanor Vance", relation: "Egyptology curator", motive: "Wanted to study artifact privately", emoji: "👩‍🏫" },
+                    { id: 3, name: "Marcus Thorne", relation: "Janitor", motive: "Paid by collector", emoji: "🧹" },
+                    { id: 4, name: "Sarah Jenkins", relation: "Museum director", motive: "Insurance fraud", emoji: "👩‍💼" },
+                    { id: 5, name: "Alex Rivera", relation: "IT technician", motive: "Disgruntled former employee", emoji: "👨‍💻" },
+                    { id: 6, name: "Ben Carter", relation: "Archaeology student", motive: "Wanted artifact for thesis", emoji: "🧑‍🎓" }
+                ],
+                clues: [
+                    "Security system was disabled using an admin password",
+                    "Footprints found near display match work shoes",
+                    "A keycard was used after hours",
+                    "Someone accessed blueprints of security system",
+                    "Large deposit appeared in suspect's bank account"
+                ],
+                correctSuspectId: 5,
+                explanation: "Alex Rivera used his IT access and knowledge of the security system to disable alarms. His recent large bank deposit and access to admin passwords were conclusive evidence.",
+                solved: false
+            },
+            {
+                id: 3,
+                title: "The Poisoned Professor",
+                difficulty: "easy", 
+                description: "A university professor was found dead in his office, poisoned during office hours. Only four students visited him that day.",
+                timeline: [
+                    { time: "9:00 AM", event: "Professor arrives at office" },
+                    { time: "10:15 AM", event: "Student A meets professor" },
+                    { time: "11:30 AM", event: "Student B meets professor" },
+                    { time: "1:45 PM", event: "Student C meets professor" },
+                    { time: "3:00 PM", event: "Professor found dead by cleaner" }
+                ],
+                suspects: [
+                    { id: 1, name: "Michael Torres", relation: "Student A - failing class", motive: "Avoid expulsion", emoji: "😠" },
+                    { id: 2, name: "Jessica Lee", relation: "Student B - research assistant", motive: "Stolen research credit", emoji: "😞" },
+                    { id: 3, name: "Ryan Park", relation: "Student C - ex-boyfriend of professor's daughter", motive: "Revenge for breakup", emoji: "😡" },
+                    { id: 4, name: "Amanda Chen", relation: "Student D - not on schedule", motive: "Unknown", emoji: "😶" },
+                    { id: 5, name: "Dr. Harris", relation: "Department rival", motive: "Professional jealousy", emoji: "👨‍🔬" },
+                    { id: 6, name: "Cleaner Wilson", relation: "Office cleaner", motive: "Previous confrontation", emoji: "🧼" }
+                ],
+                clues: [
+                    "Poison was in the professor's coffee",
+                    "Security shows only scheduled students entered",
+                    "Toxicology report shows rare plant poison",
+                    "One student studies botany",
+                    "Coffee mug had lipstick mark"
+                ],
+                correctSuspectId: 2,
+                explanation: "Jessica Lee poisoned the coffee. As a research assistant, she had access to rare plant poisons from the botany lab. The lipstick mark matched hers, and she was the only one who could have tampered with the coffee.",
+                solved: false
+            },
+            {
+                id: 4,
+                title: "Bank Vault Breach",
+                difficulty: "easy",
+                description: "$2 million vanished from a high-security bank vault without triggering alarms. The vault door shows no signs of forced entry.",
+                timeline: [
+                    { time: "5:00 PM", event: "Bank closes, vault secured" },
+                    { time: "8:30 PM", event: "Night guard starts shift" },
+                    { time: "2:15 AM", event: "Power fluctuation recorded" },
+                    { time: "6:00 AM", event: "Morning staff discover missing money" },
+                    { time: "6:30 AM", event: "Police investigation begins" }
+                ],
+                suspects: [
+                    { id: 1, name: "Bank Manager Reed", relation: "Vault access authority", motive: "Gambling addiction", emoji: "👨‍💼" },
+                    { id: 2, name: "Security Chief Miller", relation: "Knows all security codes", motive: "Medical bills for daughter", emoji: "👮‍♂️" },
+                    { id: 3, name: "Teller Johnson", relation: "Recently fired", motive: "Revenge", emoji: "👩‍💼" },
+                    { id: 4, name: "IT Specialist Chen", relation: "Security system designer", motive: "Inside job payment", emoji: "👨‍💻" },
+                    { id: 5, name: "Janitor Davis", relation: "After-hours access", motive: "Debt to loan sharks", emoji: "🧹" },
+                    { id: 6, name: "Auditor Williams", relation: "Conducted audit last week", motive: "Knew security weaknesses", emoji: "👨‍⚖️" }
+                ],
+                clues: [
+                    "Vault time lock was bypassed electronically",
+                    "Security footage from 2:00-3:00 AM is missing",
+                    "Money was transferred, not physically taken",
+                    "One suspect was in the bank after hours",
+                    "A backdoor was found in security software"
+                ],
+                correctSuspectId: 4,
+                explanation: "IT Specialist Chen created a backdoor in the security system to bypass the vault time lock. He transferred the money electronically during the power fluctuation and erased the security footage.",
+                solved: false
+            },
+            {
+                id: 5,
+                title: "The Stolen Manuscript",
+                difficulty: "easy",
+                description: "A priceless unpublished manuscript by a famous author was stolen from a locked study. Only family members had access.",
+                timeline: [
+                    { time: "9:00 AM", event: "Family breakfast in dining room" },
+                    { time: "10:30 AM", event: "Author works in study, locks door" },
+                    { time: "12:00 PM", event: "Author leaves for lunch, locks study" },
+                    { time: "2:00 PM", event: "Author returns, manuscript missing" },
+                    { time: "2:30 PM", event: "Police called, family questioned" }
+                ],
+                suspects: [
+                    { id: 1, name: "Wife Eleanor", relation: "Stand to inherit estate", motive: "Financial security", emoji: "👩" },
+                    { id: 2, name: "Son Thomas", relation: "In debt to bookies", motive: "Sell to collector", emoji: "👨" },
+                    { id: 3, name: "Daughter Clara", relation: "Literary agent", motive: "Publish posthumously", emoji: "👧" },
+                    { id: 4, name: "Butler Jenkins", relation: "30 years service", motive: "Retirement fund", emoji: "👴" },
+                    { id: 5, name: "Nephew Henry", relation: "Aspiring writer", motive: "Claim as own work", emoji: "🧑" },
+                    { id: 6, name: "Sister Margaret", relation: "Literary executor", motive: "Control over legacy", emoji: "👵" }
+                ],
+                clues: [
+                    "Study lock was picked professionally",
+                    "Manuscript was photographed, not taken",
+                    "One suspect has lockpicking tools",
+                    "Digital copies found on a laptop",
+                    "A secret meeting with publisher scheduled"
+                ],
+                correctSuspectId: 5,
+                explanation: "Nephew Henry picked the lock and photographed the manuscript to publish it as his own work. His laptop contained the digital copies, and he had scheduled a secret meeting with a publisher.",
+                solved: false
+            },
+            {
+                id: 6,
+                title: "Art Gallery Heist",
+                difficulty: "easy",
+                description: "A modern art painting worth $1 million was stolen during a gallery opening. The thief replaced it with a forgery.",
+                timeline: [
+                    { time: "6:00 PM", event: "Gallery opening begins" },
+                    { time: "7:30 PM", event: "Painting last verified authentic" },
+                    { time: "8:45 PM", event: "Lights flicker briefly" },
+                    { time: "9:30 PM", event: "Forgery discovered" },
+                    { time: "10:00 PM", event: "Guests detained for questioning" }
+                ],
+                suspects: [
+                    { id: 1, name: "Art Critic Moreau", relation: "Hated this painting", motive: "Professional grudge", emoji: "👨‍🎨" },
+                    { id: 2, name: "Collector Dubois", relation: "Wanted painting for collection", motive: "Possession obsession", emoji: "🧔" },
+                    { id: 3, name: "Artist's Assistant", relation: "Knew security details", motive: "Jealous of artist's success", emoji: "👩‍🎨" },
+                    { id: 4, name: "Security Guard Rossi", relation: "Positioned near painting", motive: "Debt to organized crime", emoji: "💂" },
+                    { id: 5, name: "Gallery Owner Schmidt", relation: "Insurance fraud suspect", motive: "Financial difficulties", emoji: "👨‍💼" },
+                    { id: 6, name: "Rival Artist Chen", relation: "Wanted to discredit artist", motive: "Professional rivalry", emoji: "🧑‍🎨" }
+                ],
+                clues: [
+                    "Forgery was prepared weeks in advance",
+                    "Security camera footage was looped",
+                    "One suspect studied art restoration",
+                    "A hidden compartment found in a vehicle",
+                    "Paint chemicals match suspect's studio"
+                ],
+                correctSuspectId: 3,
+                explanation: "The artist's assistant created the forgery in advance and swapped it during the light flicker. Their knowledge of security and access to the same paints were key evidence.",
+                solved: false
+            },
+            {
+                id: 7,
+                title: "Corporate Espionage",
+                difficulty: "easy",
+                description: "Trade secrets were stolen from a tech company's secure server. The breach happened during a board meeting.",
+                timeline: [
+                    { time: "9:00 AM", event: "Employees arrive at office" },
+                    { time: "10:00 AM", event: "Board meeting starts, executives away" },
+                    { time: "10:15 AM", event: "Server access detected from empty office" },
+                    { time: "11:30 AM", event: "Board meeting ends" },
+                    { time: "12:00 PM", event: "Data breach discovered" }
+                ],
+                suspects: [
+                    { id: 1, name: "CFO Richardson", relation: "Financial troubles", motive: "Sell secrets to competitor", emoji: "👨‍💼" },
+                    { id: 2, name: "IT Admin Park", relation: "Server access credentials", motive: "Job offer from rival", emoji: "👩‍💻" },
+                    { id: 3, name: "Intern Davis", relation: "In empty office during breach", motive: "Career advancement", emoji: "🧑‍💼" },
+                    { id: 4, name: "Janitor Gomez", relation: "Access to all offices", motive: "Blackmailed by competitor", emoji: "🧹" },
+                    { id: 5, name: "Receptionist Lee", relation: "Sees all comings/goings", motive: "Resentment over low pay", emoji: "👩" },
+                    { id: 6, name: "Consultor Zhang", relation: "Recent security audit", motive: "Corporate spy", emoji: "👨‍⚖️" }
+                ],
+                clues: [
+                    "Hacking used internal credentials",
+                    "Data transferred to personal cloud",
+                    "One suspect recently visited competitor HQ",
+                    "Keycard logs show suspicious movement",
+                    "Encrypted messages to rival company"
+                ],
+                correctSuspectId: 6,
+                explanation: "Consultant Zhang used his security audit access to steal trade secrets. His recent visit to a competitor's HQ and encrypted communications confirmed he was a corporate spy.",
+                solved: false
+            },
+            {
+                id: 8,
+                title: "Jewelry Store Robbery",
+                difficulty: "easy",
+                description: "Diamonds were stolen from a high-end jewelry store. The security system was disabled with a master code.",
+                timeline: [
+                    { time: "5:30 PM", event: "Store closes, alarm set" },
+                    { time: "8:00 PM", event: "Alarm disabled with master code" },
+                    { time: "8:15 PM", event: "Security camera feeds cut" },
+                    { time: "8:30 PM", event: "Police alerted by silent alarm" },
+                    { time: "8:45 PM", event: "Police arrive, diamonds gone" }
+                ],
+                suspects: [
+                    { id: 1, name: "Store Manager Rossi", relation: "Knows master code", motive: "Gambling debts", emoji: "👨‍💼" },
+                    { id: 2, name: "Security Guard Miller", relation: "Night shift", motive: "Son's college tuition", emoji: "👮" },
+                    { id: 3, name: "Sales Associate Chen", relation: "Recently fired", motive: "Revenge", emoji: "👩" },
+                    { id: 4, name: "Owner's Son Marco", relation: "Spends beyond means", motive: "Lifestyle maintenance", emoji: "🧑" },
+                    { id: 5, name: "Cleaner Garcia", relation: "After-hours access", motive: "Medical bills", emoji: "🧽" },
+                    { id: 6, name: "Delivery Driver Kim", relation: "Frequent store visitor", motive: "Organized crime ties", emoji: "🚚" }
+                ],
+                clues: [
+                    "Master code was used, not guessed",
+                    "Diamonds were specifically targeted",
+                    "One suspect's financial records show sudden debt",
+                    "Security camera cut from inside store",
+                    "Stolen diamonds match sample given to suspect"
+                ],
+                correctSuspectId: 1,
+                explanation: "Store Manager Rossi used the master code to disable alarms and took diamonds to pay his gambling debts. Financial records showed massive losses, and he had access to diamond samples.",
+                solved: false
+            },
+            {
+                id: 9,
+                title: "Hotel Room Theft",
+                difficulty: "easy",
+                description: "A famous actress's jewelry was stolen from her hotel room while she was at a press conference.",
+                timeline: [
+                    { time: "2:00 PM", event: "Actress leaves for press conference" },
+                    { time: "2:15 PM", event: "Room service delivered to room" },
+                    { time: "2:30 PM", event: "Maid cleans adjacent room" },
+                    { time: "3:00 PM", event: "Actress returns, jewelry missing" },
+                    { time: "3:15 PM", event: "Hotel security notified" }
+                ],
+                suspects: [
+                    { id: 1, name: "Maid Rodriguez", relation: "Room access", motive: "Sell to pay for mother's surgery", emoji: "👩‍🍳" },
+                    { id: 2, name: "Room Service Waiter", relation: "Entered room alone", motive: "Quick profit", emoji: "👨‍🍳" },
+                    { id: 3, name: "Hotel Manager", relation: "Master key access", motive: "Hotel financial troubles", emoji: "👨‍💼" },
+                    { id: 4, name: "Actress's Assistant", relation: "Knew jewelry location", motive: "Jealousy", emoji: "👩‍💼" },
+                    { id: 5, name: "Rival Actress", relation: "Staying in hotel", motive: "Sabotage", emoji: "👩‍🎤" },
+                    { id: 6, name: "Security Guard", relation: "Patrolled floor", motive: "Inside job with fence", emoji: "💂‍♂️" }
+                ],
+                clues: [
+                    "Safe was opened with combination, not forced",
+                    "One suspect was seen near pawn shop",
+                    "Jewelry was insured for $2 million",
+                    "Digital key logs show unauthorized entry",
+                    "Actress had argued with suspect earlier"
+                ],
+                correctSuspectId: 4,
+                explanation: "The actress's assistant stole the jewelry out of jealousy. She knew the safe combination and was seen at a pawn shop. They had argued earlier about credit for the actress's success.",
+                solved: false
+            },
+            {
+                id: 10,
+                title: "Library Manuscript Theft",
+                difficulty: "easy",
+                description: "A rare 15th-century manuscript was stolen from a university library's special collections room.",
+                timeline: [
+                    { time: "9:00 AM", event: "Library opens" },
+                    { time: "10:30 AM", event: "Researcher reviews manuscript" },
+                    { time: "11:45 AM", event: "Fire alarm test, brief evacuation" },
+                    { time: "12:15 PM", event: "Manuscript discovered missing" },
+                    { time: "12:30 PM", event: "Police secure library" }
+                ],
+                suspects: [
+                    { id: 1, name: "Researcher Ahmed", relation: "Last to see manuscript", motive: "Academic glory", emoji: "👨‍🔬" },
+                    { id: 2, name: "Librarian Chen", relation: "Special collections access", motive: "Debt from divorce", emoji: "👩‍🏫" },
+                    { id: 3, name: "Student Intern", relation: "Helps in special collections", motive: "Tuition money", emoji: "🧑‍🎓" },
+                    { id: 4, name: "Professor Williams", relation: "Expert on manuscript", motive: "Complete personal collection", emoji: "👨‍🏫" },
+                    { id: 5, name: "Security Guard", relation: "Fire alarm test coordinator", motive: "Paid by collector", emoji: "👮‍♀️" },
+                    { id: 6, name: "Janitor", relation: "Access during evacuation", motive: "Sell on black market", emoji: "🧹" }
+                ],
+                clues: [
+                    "Manuscript replaced with high-quality copy",
+                    "Fire alarm test was unauthorized",
+                    "One suspect has history of artifact theft",
+                    "Special collections key was duplicated",
+                    "Black market listing matches manuscript"
+                ],
+                correctSuspectId: 4,
+                explanation: "Professor Williams orchestrated the theft during the unauthorized fire alarm test. He had a history of similar thefts and created the high-quality copy. A black market listing was traced to him.",
+                solved: false
+            },
+            // ========== MEDIUM CASES (11-20) ==========
+            {
+                id: 11,
+                title: "The Opera House Murder",
+                difficulty: "medium",
+                description: "A famous tenor was found dead in his dressing room during intermission. He was poisoned.",
+                timeline: [
+                    { time: "7:30 PM", event: "Performance begins" },
+                    { time: "8:45 PM", event: "Intermission starts" },
+                    { time: "9:00 PM", event: "Tenor found dead" },
+                    { time: "9:05 PM", event: "Theater locked down" },
+                    { time: "9:30 PM", event: "Police begin interviews" }
+                ],
+                suspects: [
+                    { id: 1, name: "Understudy Moretti", relation: "Would take lead role", motive: "Career opportunity", emoji: "🎭" },
+                    { id: 2, name: "Soprano Valdez", relation: "Tenor's ex-lover", motive: "Jealousy over new romance", emoji: "🎤" },
+                    { id: 3, name: "Conductor Schmidt", relation: "Professional rivalry", motive: "Artistic differences", emoji: "🎼" },
+                    { id: 4, name: "Stage Manager Lee", relation: "Access to all areas", motive: "Blackmail gone wrong", emoji: "👨‍💼" },
+                    { id: 5, name: "Costume Designer", relation: "Tenor criticized her work", motive: "Revenge for humiliation", emoji: "👗" },
+                    { id: 6, name: "Theater Owner", relation: "Tenor threatened to leave", motive: "Financial ruin", emoji: "🏛️" }
+                ],
+                clues: [
+                    "Poison was in throat spray",
+                    "Only two people handled the spray",
+                    "Poison requires medical knowledge",
+                    "One suspect studied pharmacology",
+                    "Love letter found in dressing room"
+                ],
+                correctSuspectId: 2,
+                explanation: "Soprano Valdez poisoned the throat spray. She had studied pharmacology briefly and had access to the dressing room. A love letter revealed their affair had ended badly.",
+                solved: false
+            },
+            {
+                id: 12,
+                title: "Tech CEO Kidnapping",
+                difficulty: "medium",
+                description: "A billionaire tech CEO vanished from his secure mansion. No ransom note was left.",
+                timeline: [
+                    { time: "10:00 PM", event: "CEO retires to study" },
+                    { time: "11:30 PM", event: "Security cameras briefly disabled" },
+                    { time: "12:00 AM", event: "Guard finds study empty" },
+                    { time: "12:30 AM", event: "Police notified" },
+                    { time: "1:00 AM", event: "Search of premises begins" }
+                ],
+                suspects: [
+                    { id: 1, name: "Business Partner", relation: "Company co-founder", motive: "Control of company", emoji: "🤝" },
+                    { id: 2, name: "Ex-Wife", relation: "Contentious divorce", motive: "$100 million settlement", emoji: "💔" },
+                    { id: 3, name: "Rival CEO", relation: "Competitor", motive: "Acquire technology", emoji: "👨‍💼" },
+                    { id: 4, name: "Security Chief", relation: "Knows all vulnerabilities", motive: "Paid by competitor", emoji: "🛡️" },
+                    { id: 5, name: "Personal Assistant", relation: "Knew all schedules", motive: "Stock options dispute", emoji: "📋" },
+                    { id: 6, name: "Estranged Son", relation: "Cut from will", motive: "Inheritance", emoji: "👨" }
+                ],
+                clues: [
+                    "Security system disabled with insider code",
+                    "No signs of struggle in study",
+                    "CEO's medication left behind",
+                    "One suspect withdrew large sum",
+                    "Private jet filed flight plan that night"
+                ],
+                correctSuspectId: 6,
+                explanation: "The estranged son kidnapped his father to force changes to the will. He used insider knowledge to disable security. A private jet he chartered was traced to a remote location.",
+                solved: false
+            },
+            {
+                id: 13,
+                title: "Diplomatic Pouch Theft",
+                difficulty: "medium",
+                description: "A diplomatic pouch containing sensitive documents was stolen from an embassy secure room.",
+                timeline: [
+                    { time: "8:00 AM", event: "Pouch arrives at embassy" },
+                    { time: "9:30 AM", event: "Pouch placed in secure room" },
+                    { time: "11:00 AM", event: "Power outage in embassy" },
+                    { time: "11:15 AM", event: "Pouch discovered missing" },
+                    { time: "11:30 AM", event: "Embassy locked down" }
+                ],
+                suspects: [
+                    { id: 1, name: "First Secretary", relation: "Knew pouch contents", motive: "Sell to foreign power", emoji: "👔" },
+                    { id: 2, name: "Security Attaché", relation: "Secure room access", motive: "Ideological reasons", emoji: "🎖️" },
+                    { id: 3, name: "Communications Officer", relation: "Monitors all transmissions", motive: "Blackmail material", emoji: "📡" },
+                    { id: 4, name: "Local Staff Supervisor", relation: "Power control access", motive: "Family threatened", emoji: "👨‍🔧" },
+                    { id: 5, name: "Cultural Attaché", relation: "Recently arrived", motive: "Undercover agent", emoji: "🎭" },
+                    { id: 6, name: "Ambassador's Aide", relation: "Access to all areas", motive: "Gambling debts", emoji: "📁" }
+                ],
+                clues: [
+                    "Power outage was caused internally",
+                    "Secure room lock was bypassed electronically",
+                    "One suspect has unexplained wealth",
+                    "Encrypted messages to hostile country",
+                    "Pouch contents known to very few"
+                ],
+                correctSuspectId: 5,
+                explanation: "The cultural attaché was an undercover agent who caused the power outage to steal the pouch. Encrypted communications to a hostile country and specialized equipment found in his quarters confirmed this.",
+                solved: false
+            },
+            {
+                id: 14,
+                title: "Antique Weapon Theft",
+                difficulty: "medium",
+                description: "A collection of medieval weapons was stolen from a castle museum. The theft required knowledge of medieval architecture.",
+                timeline: [
+                    { time: "6:00 PM", event: "Museum closes" },
+                    { time: "9:00 PM", event: "Night guard begins rounds" },
+                    { time: "10:30 PM", event: "Motion sensor triggered in armory" },
+                    { time: "11:00 PM", event: "Guard finds weapons missing" },
+                    { time: "11:30 PM", event: "Police arrive" }
+                ],
+                suspects: [
+                    { id: 1, name: "Historian Dr. Vance", relation: "Weapons expert", motive: "Private collection", emoji: "👨‍🏫" },
+                    { id: 2, name: "Security Consultant", relation: "Designed security system", motive: "Paid by collector", emoji: "🛡️" },
+                    { id: 3, name: "Local Blacksmith", relation: "Weapon restoration", motive: "Sell to reenactors", emoji: "⚒️" },
+                    { id: 4, name: "Tour Guide", relation: "Knows secret passages", motive: "Medical bills", emoji: "🗣️" },
+                    { id: 5, name: "Noble Family Descendant", relation: "Claims weapons belong to family", motive: "Restore family honor", emoji: "👑" },
+                    { id: 6, name: "Auction House Representative", relation: "Recently appraised weapons", motive: "Commission on sale", emoji: "🏛️" }
+                ],
+                clues: [
+                    "Theft used medieval secret passage",
+                    "Weapons were carefully selected, not random",
+                    "One suspect has castle blueprints",
+                    "Security system was bypassed, not broken",
+                    "Specific weapons matching suspect's research"
+                ],
+                correctSuspectId: 1,
+                explanation: "Historian Dr. Vance used his knowledge of medieval architecture and secret passages to bypass security. The stolen weapons matched exactly those he had written about needing for his private collection.",
+                solved: false
+            },
+            {
+                id: 15,
+                title: "Corporate CEO Murder",
+                difficulty: "medium",
+                description: "A pharmaceutical CEO was found dead in his office. He was shot with a rare antique pistol.",
+                timeline: [
+                    { time: "7:00 PM", event: "CEO works late" },
+                    { time: "8:15 PM", event: "Security guard hears shot" },
+                    { time: "8:20 PM", event: "Guard finds CEO dead" },
+                    { time: "8:30 PM", event: "Police arrive" },
+                    { time: "9:00 PM", event: "Employees detained" }
+                ],
+                suspects: [
+                    { id: 1, name: "Vice President", relation: "Would become CEO", motive: "Power and stock value", emoji: "👨‍💼" },
+                    { id: 2, name: "Research Scientist", relation: "Fired project lead", motive: "Revenge for stolen research", emoji: "👩‍🔬" },
+                    { id: 3, name: "Estranged Daughter", relation: "Cut from will", motive: "Inheritance", emoji: "👧" },
+                    { id: 4, name: "Business Rival", relation: "Losing takeover battle", motive: "Remove obstacle", emoji: "🤝" },
+                    { id: 5, name: "Personal Driver", relation: "Access to CEO's schedule", motive: "Overheard incriminating plans", emoji: "🚗" },
+                    { id: 6, name: "Security Head", relation: "Weapons collector", motive: "Blackmail evidence", emoji: "🔫" }
+                ],
+                clues: [
+                    "Antique pistol matches security head's collection",
+                    "CEO was about to expose corporate fraud",
+                    "One suspect was seen near office earlier",
+                    "Murder weapon wiped clean of prints",
+                    "Threatening email from fired employee"
+                ],
+                correctSuspectId: 2,
+                explanation: "The research scientist stole the antique pistol from the security head's collection and killed the CEO who had stolen her research and fired her. She had sent threatening emails and was seen near the office.",
+                solved: false
+            },
+            {
+                id: 16,
+                title: "Diamond Exchange Robbery",
+                difficulty: "medium",
+                description: "Uncut diamonds worth $50 million were stolen from a high-security diamond exchange.",
+                timeline: [
+                    { time: "3:00 PM", event: "Diamonds arrive for grading" },
+                    { time: "4:30 PM", event: "Placed in vault" },
+                    { time: "6:00 PM", event: "Exchange closes" },
+                    { time: "8:45 PM", event: "Vault alarm triggers" },
+                    { time: "9:00 PM", event: "Police find vault empty" }
+                ],
+                suspects: [
+                    { id: 1, name: "Vault Manager", relation: "Only knows full combination", motive: "Retirement fund", emoji: "👨‍💼" },
+                    { id: 2, name: "Security Designer", relation: "Designed vault security", motive: "Blueprint knowledge", emoji: "🏗️" },
+                    { id: 3, name: "Diamond Grader", relation: "Handled diamonds", motive: "Replace with fakes", emoji: "💎" },
+                    { id: 4, name: "Insurance Agent", relation: "Recent policy increase", motive: "Insurance fraud cut", emoji: "📑" },
+                    { id: 5, name: "Cleaning Supervisor", relation: "After-hours access", motive: "Organized crime ties", emoji: "🧹" },
+                    { id: 6, name: "IT Security Head", relation: "Alarm system control", motive: "Disable alarms", emoji: "🖥️" }
+                ],
+                clues: [
+                    "Vault opened with correct combination",
+                    "Alarms were disabled from control room",
+                    "Diamonds were replaced with high-quality fakes",
+                    "One suspect has connections to gem counterfeiters",
+                    "Security system logs were deleted"
+                ],
+                correctSuspectId: 3,
+                explanation: "The diamond grader replaced the real diamonds with fakes during grading. He had connections to gem counterfeiters and deleted security logs. The vault was never actually robbed - the diamonds were switched earlier.",
+                solved: false
+            },
+            {
+                id: 17,
+                title: "Celebrity Blackmail Case",
+                difficulty: "medium",
+                description: "A famous actor is being blackmailed with incriminating photos. The blackmailer demands $5 million.",
+                timeline: [
+                    { time: "9:00 AM", event: "Actor receives first blackmail email" },
+                    { time: "12:00 PM", event: "$5 million demand made" },
+                    { time: "2:30 PM", event: "Deadline set for 48 hours" },
+                    { time: "4:00 PM", event: "Private investigator hired" },
+                    { time: "6:00 PM", event: "Suspects identified" }
+                ],
+                suspects: [
+                    { id: 1, name: "Former Bodyguard", relation: "Fired for drinking", motive: "Revenge", emoji: "💪" },
+                    { id: 2, name: "Ex-Girlfriend", relation: "Acrimonious breakup", motive: "Financial gain", emoji: "👩" },
+                    { id: 3, name: "Tabloid Photographer", relation: "Follows celebrity", motive: "Career-making photos", emoji: "📸" },
+                    { id: 4, name: "Personal Assistant", relation: "Access to private life", motive: "Resentment over treatment", emoji: "📋" },
+                    { id: 5, name: "Business Manager", relation: "Handles finances", motive: "Embezzlement cover-up", emoji: "💰" },
+                    { id: 6, name: "Rival Actor", relation: "Competing for role", motive: "Destroy reputation", emoji: "🎬" }
+                ],
+                clues: [
+                    "Photos taken from actor's own home",
+                    "Blackmailer knows private details",
+                    "Emails traced to public library computers",
+                    "One suspect recently purchased camera equipment",
+                    "Payment demanded to offshore account"
+                ],
+                correctSuspectId: 4,
+                explanation: "The personal assistant planted hidden cameras in the actor's home. Resentful over poor treatment, he took the photos and demanded payment to an offshore account. His purchase of spy equipment was documented.",
+                solved: false
+            },
+            {
+                id: 18,
+                title: "Museum Mummy Theft",
+                difficulty: "medium",
+                description: "An ancient Egyptian mummy was stolen from a museum. The theft required Egyptology knowledge.",
+                timeline: [
+                    { time: "10:00 PM", event: "Museum closes" },
+                    { time: "11:30 PM", event: "Alarms disabled in Egypt wing" },
+                    { time: "12:15 AM", event: "Security finds display empty" },
+                    { time: "12:45 AM", event: "Police discover secret tunnel" },
+                    { time: "1:30 AM", event: "Tunnel leads to nearby building" }
+                ],
+                suspects: [
+                    { id: 1, name: "Egyptology Professor", relation: "Consulted on exhibit", motive: "Academic research", emoji: "👨‍🏫" },
+                    { id: 2, name: "Museum Director", relation: "Insurance fraud suspect", motive: "Financial problems", emoji: "👩‍💼" },
+                    { id: 3, name: "Archaeology Student", relation: "Intern at museum", motive: "Prove theory about mummy", emoji: "🧑‍🎓" },
+                    { id: 4, name: "Collector Shepard", relation: "Known artifact buyer", motive: "Private collection", emoji: "🧐" },
+                    { id: 5, name: "Security Consultant", relation: "Recent security upgrade", motive: "Knew vulnerabilities", emoji: "🛡️" },
+                    { id: 6, name: "Conservator Ahmed", relation: "Worked on mummy", motive: "Cultural repatriation", emoji: "🔬" }
+                ],
+                clues: [
+                    "Tunnel construction required engineering knowledge",
+                    "Mummy was carefully removed, not damaged",
+                    "One suspect owns adjacent building",
+                    "Security blueprints recently accessed",
+                    "Cultural repatriation manifesto found"
+                ],
+                correctSuspectId: 6,
+                explanation: "Conservator Ahmed built the tunnel from his adjacent building to repatriate the mummy to Egypt. His engineering background and cultural repatriation manifesto explained the careful, knowledgeable theft.",
+                solved: false
+            },
+            {
+                id: 19,
+                title: "Private Jet Theft",
+                difficulty: "medium",
+                description: "A luxury private jet was stolen from a secure hangar. The thief needed piloting skills.",
+                timeline: [
+                    { time: "8:00 PM", event: "Jet secured in hangar" },
+                    { time: "10:30 PM", event: "Security cameras disabled" },
+                    { time: "11:00 PM", event: "Hangar doors opened" },
+                    { time: "11:15 PM", event: "Jet takes off without clearance" },
+                    { time: "11:30 PM", event: "Air traffic control alerts authorities" }
+                ],
+                suspects: [
+                    { id: 1, name: "Disgruntled Pilot", relation: "Recently fired", motive: "Revenge and escape", emoji: "👨‍✈️" },
+                    { id: 2, name: "Maintenance Chief", relation: "Hangar access", motive: "Sell to foreign buyer", emoji: "🔧" },
+                    { id: 3, name: "Business Rival", relation: "Wanted jet for own use", motive: "Status symbol", emoji: "👨‍💼" },
+                    { id: 4, name: "Security Head", relation: "Disabled security", motive: "Debt to organized crime", emoji: "🛡️" },
+                    { id: 5, name: "Owner's Son", relation: "Wanted to impress friends", motive: "Thrill-seeking", emoji: "🧑" },
+                    { id: 6, name: "Foreign Agent", relation: "Wanted jet technology", motive: "Reverse engineering", emoji: "🕵️" }
+                ],
+                clues: [
+                    "Jet flew to country with no extradition",
+                    "Security codes were used, not hacked",
+                    "One suspect has pilot license but no job",
+                    "Flight plan filed in advance",
+                    "Communications equipment specifically removed"
+                ],
+                correctSuspectId: 1,
+                explanation: "The disgruntled pilot used his knowledge and access to steal the jet and flee to a country with no extradition. He filed a flight plan in advance and removed tracking equipment.",
+                solved: false
+            },
+            {
+                id: 20,
+                title: "Vineyard Sabotage",
+                difficulty: "medium",
+                description: "A prize-winning vineyard's grapes were poisoned before harvest. The sabotage would bankrupt the owner.",
+                timeline: [
+                    { time: "8:00 PM", event: "Vineyard workers finish for day" },
+                    { time: "9:30 PM", event: "Security guard sees suspicious figure" },
+                    { time: "10:15 PM", event: "Chemicals spread in vineyard" },
+                    { time: "6:00 AM", event: "Damage discovered" },
+                    { time: "7:00 AM", event: "Police find chemical container" }
+                ],
+                suspects: [
+                    { id: 1, name: "Neighboring Vineyard Owner", relation: "Business competition", motive: "Eliminate competition", emoji: "🍇" },
+                    { id: 2, name: "Former Winemaker", relation: "Fired for incompetence", motive: "Revenge", emoji: "🍷" },
+                    { id: 3, name: "Chemical Supplier", relation: "Recent dispute over payment", motive: "Send message to others", emoji: "⚗️" },
+                    { id: 4, name: "Environmental Activist", relation: "Opposes pesticide use", motive: "Make statement", emoji: "🌿" },
+                    { id: 5, name: "Land Developer", relation: "Wants to buy land", motive: "Force sale", emoji: "🏗️" },
+                    { id: 6, name: "Owner's Nephew", relation: "Inherits if business fails", motive: "Early inheritance", emoji: "👨" }
+                ],
+                clues: [
+                    "Chemical used is rare and expensive",
+                    "Saboteur knew exactly which vines were most valuable",
+                    "One suspect recently purchased this chemical",
+                    "Footprints match work boots sold locally",
+                    "Threatening note about 'family legacy'"
+                ],
+                correctSuspectId: 6,
+                explanation: "The owner's nephew poisoned the vines to force the vineyard into bankruptcy so he could inherit the land and sell to developers. He purchased the chemical recently and left footprints matching his work boots.",
+                solved: false
+            },
+            // ========== HARD CASES (21-30) ==========
+            {
+                id: 21,
+                title: "The Perfect Bank Heist",
+                difficulty: "hard",
+                description: "$100 million disappeared from a Federal Reserve vault. No alarms were triggered, no doors forced.",
+                timeline: [
+                    { time: "5:00 PM", event: "Daily audit confirms $100 million present" },
+                    { time: "6:00 PM", event: "Vault sealed for night" },
+                    { time: "2:00 AM", event: "Unusual power fluctuation recorded" },
+                    { time: "6:00 AM", event: "Morning audit discovers shortage" },
+                    { time: "6:30 AM", event: "FBI called in" }
+                ],
+                suspects: [
+                    { id: 1, name: "Federal Reserve Chairman", relation: "Ultimate authority", motive: "Cover up earlier theft", emoji: "👨‍💼" },
+                    { id: 2, name: "Vault Architect", relation: "Designed vault", motive: "Prove vulnerability", emoji: "🏗️" },
+                    { id: 3, name: "Security Systems Engineer", relation: "Maintains all systems", motive: "Ideological - hates banking system", emoji: "🖥️" },
+                    { id: 4, name: "Internal Auditor", relation: "Concealed earlier discrepancies", motive: "Avoid prison", emoji: "📊" },
+                    { id: 5, name: "Head of Transportation", relation: "Money movement schedules", motive: "Organized crime partnership", emoji: "🚚" },
+                    { id: 6, name: "IT Security Director", relation: "Access to all digital records", motive: "Create perfect crime", emoji: "🔒" }
+                ],
+                clues: [
+                    "Money was digitally transferred, not physically taken",
+                    "Security logs show normal activity all night",
+                    "One suspect has novel about perfect bank heist",
+                    "Encrypted messages discussing 'project charity'",
+                    "Vault was never actually entered"
+                ],
+                correctSuspectId: 6,
+                explanation: "The IT Security Director created a digital ghost transfer that moved the money electronically while making security logs show normal activity. He wrote a novel about the perfect heist as research.",
+                solved: false
+            },
+            {
+                id: 22,
+                title: "The Impossible Museum Theft",
+                difficulty: "hard",
+                description: "Three priceless paintings stolen simultaneously from different museums across the city. All thefts occurred at exactly 2:15 AM.",
+                timeline: [
+                    { time: "2:00 AM", event: "All museums secure" },
+                    { time: "2:15 AM", event: "Simultaneous thefts at three locations" },
+                    { time: "2:30 AM", event: "Alarms triggered at all museums" },
+                    { time: "3:00 AM", event: "Police discover coordinated theft" },
+                    { time: "4:00 AM", event: "Interpol notified" }
+                ],
+                suspects: [
+                    { id: 1, name: "Art Collector Consortium", relation: "Wanted paintings for private collection", motive: "Possession beyond price", emoji: "🧐" },
+                    { id: 2, name: "Insurance Investigator", relation: "Knew all security weaknesses", motive: "Inside job for cut", emoji: "🕵️" },
+                    { id: 3, name: "Disgraced Curator", relation: "Fired from all three museums", motive: "Revenge and profit", emoji: "👨‍🎨" },
+                    { id: 4, name: "Security Consultant", relation: "Worked with all museums", motive: "Prove superiority", emoji: "🛡️" },
+                    { id: 5, name: "Art Forger Ring", relation: "Replace with perfect forgeries", motive: "Sell originals, display fakes", emoji: "🎨" },
+                    { id: 6, name: "International Thief", relation: "Known for impossible heists", motive: "Reputation and challenge", emoji: "🧤" }
+                ],
+                clues: [
+                    "Each theft required different specialized skills",
+                    "Security systems were hacked simultaneously",
+                    "One suspect visited all three museums last month",
+                    "Forgeries already placed in black market",
+                    "Mathematical pattern in theft times"
+                ],
+                correctSuspectId: 5,
+                explanation: "An art forger ring replaced the paintings with perfect forgeries over several weeks, then triggered the 'thefts' simultaneously to cover their tracks. The originals were already on the black market.",
+                solved: false
+            },
+            {
+                id: 23,
+                title: "The Cryptic Assassination",
+                difficulty: "hard",
+                description: "A politician was killed by a rare poison that takes exactly 24 hours to act. The killer was with him 24 hours earlier.",
+                timeline: [
+                    { time: "Day 1, 3:00 PM", event: "Politician meets with six people" },
+                    { time: "Day 2, 2:45 PM", event: "Politician feels ill" },
+                    { time: "Day 2, 3:00 PM", event: "Politician dies exactly 24h after meeting" },
+                    { time: "Day 2, 3:30 PM", event: "Toxicology identifies rare poison" },
+                    { time: "Day 2, 4:00 PM", event: "24-hour alibi search begins" }
+                ],
+                suspects: [
+                    { id: 1, name: "Political Rival", relation: "Opposing candidate", motive: "Win election", emoji: "⚖️" },
+                    { id: 2, name: "Businessman", relation: "Corruption investigation target", motive: "Avoid prison", emoji: "👨‍💼" },
+                    { id: 3, name: "Jealous Spouse", relation: "Marriage troubles", motive: "Inheritance and freedom", emoji: "💔" },
+                    { id: 4, name: "Research Scientist", relation: "Developed the poison", motive: "Test effectiveness", emoji: "👩‍🔬" },
+                    { id: 5, name: "Foreign Agent", relation: "Politician opposed their country", motive: "Remove obstacle", emoji: "🕵️" },
+                    { id: 6, name: "Aide", relation: "Overheard damaging secret", motive: "Prevent exposure", emoji: "📋" }
+                ],
+                clues: [
+                    "Poison must be administered in food or drink",
+                    "Only one suspect had access to poison source",
+                    "24-hour delay creates perfect alibi",
+                    "One suspect studied toxicology",
+                    "Politician's will changed recently"
+                ],
+                correctSuspectId: 4,
+                explanation: "The research scientist used her own poison to test it while creating an unbreakable alibi. She had access to the rare compound and toxicology knowledge to calculate the exact dosage.",
+                solved: false
+            },
+            {
+                id: 24,
+                title: "The Vanishing Train",
+                difficulty: "hard",
+                description: "A luxury train carrying $300 million in gold vanished between two mountain tunnels. No wreckage found.",
+                timeline: [
+                    { time: "10:00 PM", event: "Train enters first tunnel" },
+                    { time: "10:05 PM", event: "Train should exit tunnel" },
+                    { time: "10:10 PM", event: "Train doesn't appear" },
+                    { time: "10:30 PM", event: "Search teams dispatched" },
+                    { time: "11:00 PM", event: "No trace of train found" }
+                ],
+                suspects: [
+                    { id: 1, name: "Train Engineer", relation: "Only one who knew route", motive: "Lifetime of wealth", emoji: "👨‍🔧" },
+                    { id: 2, name: "Security Chief", relation: "Gold transport expert", motive: "Inside job with team", emoji: "🛡️" },
+                    { id: 3, name: "Mining Company CEO", relation: "Gold belonged to company", motive: "Insurance fraud", emoji: "👨‍💼" },
+                    { id: 4, name: "Tunnel Engineer", relation: "Built both tunnels", motive: "Secret tunnel construction", emoji: "🏗️" },
+                    { id: 5, name: "Retired Conductor", relation: "Knew abandoned tracks", motive: "Revenge for forced retirement", emoji: "👴" },
+                    { id: 6, name: "Historian", relation: "Studied railway history", motive: "Prove theory about hidden branch", emoji: "📚" }
+                ],
+                clues: [
+                    "Satellite images show no train wreckage",
+                    "Abandoned railway branch near tunnel",
+                    "One suspect purchased nearby land recently",
+                    "Gold was insured for $500 million",
+                    "Historical blueprints show secret switch"
+                ],
+                correctSuspectId: 4,
+                explanation: "The tunnel engineer built a secret switch to an abandoned branch line where the train was hidden. He purchased the land where the branch line ended to retrieve the gold later.",
+                solved: false
+            },
+            {
+                id: 25,
+                title: "The Digital Ghost Murder",
+                difficulty: "hard",
+                description: "A tech billionaire was killed in his smart home. All digital evidence points to suicide, but forensics say murder.",
+                timeline: [
+                    { time: "8:00 PM", event: "Victim arrives home alone" },
+                    { time: "9:30 PM", event: "Smart home system logs unusual activity" },
+                    { time: "10:15 PM", event: "Security cameras show victim alone" },
+                    { time: "10:30 PM", event: "Gunshot detected by sensors" },
+                    { time: "11:00 PM", event: "Body found, gun in hand" }
+                ],
+                suspects: [
+                    { id: 1, name: "Business Partner", relation: "Company control battle", motive: "Full ownership", emoji: "🤝" },
+                    { id: 2, name: "AI Assistant Creator", relation: "Designed home AI", motive: "Test AI capabilities", emoji: "🤖" },
+                    { id: 3, name: "Estranged Son", relation: "Cut from will", motive: "Inheritance", emoji: "👨" },
+                    { id: 4, name: "Security Head", relation: "Knew all system vulnerabilities", motive: "Silence about illegal surveillance", emoji: "🔒" },
+                    { id: 5, name: "Rival Tech CEO", relation: "Acquisition target", motive: "Remove resistance", emoji: "👨‍💼" },
+                    { id: 6, name: "Hacker Collective", relation: "Victim exposed their operations", motive: "Revenge and warning", emoji: "💻" }
+                ],
+                clues: [
+                    "Smart home AI behavior was modified",
+                    "Digital logs were expertly altered",
+                    "Gun was fired from distance, not contact",
+                    "One suspect can mimic victim's voice perfectly",
+                    "AI was trained to obey specific voice"
+                ],
+                correctSuspectId: 2,
+                explanation: "The AI assistant creator programmed the smart home AI to obey his voice commands, making it alter logs and create the suicide illusion. He used voice mimicry to give commands remotely.",
+                solved: false
+            },
+            {
+                id: 26,
+                title: "The Symphony Poisoning",
+                difficulty: "hard",
+                description: "An entire orchestra became violently ill during a performance. The poison was in their water bottles.",
+                timeline: [
+                    { time: "7:00 PM", event: "Orchestra members arrive" },
+                    { time: "7:30 PM", event: "Water bottles placed backstage" },
+                    { time: "8:00 PM", event: "Performance begins" },
+                    { time: "8:45 PM", event: "Musicians begin feeling ill" },
+                    { time: "9:00 PM", event: "Performance halted, medical help called" }
+                ],
+                suspects: [
+                    { id: 1, name: "Conductor", relation: "Recent conflict with orchestra", motive: "Replace with more obedient musicians", emoji: "🎼" },
+                    { id: 2, name: "Soloist", relation: "Jealous of attention to orchestra", motive: "Steal spotlight", emoji: "🎻" },
+                    { id: 3, name: "Stage Manager", relation: "Access to all backstage areas", motive: "Insurance payout for canceled tour", emoji: "👨‍💼" },
+                    { id: 4, name: "Retired Musician", relation: "Bitter about forced retirement", motive: "Revenge on replacement", emoji: "👴" },
+                    { id: 5, name: "Music Critic", relation: "Hated this orchestra's style", motive: "Make career with scandal story", emoji: "📝" },
+                    { id: 6, name: "Rival Orchestra Manager", relation: "Competing for same venues", motive: "Eliminate competition", emoji: "🎭" }
+                ],
+                clues: [
+                    "Only water bottles of specific musicians were poisoned",
+                    "Poison causes temporary illness, not death",
+                    "One suspect studied pharmacology",
+                    "Tour insurance policy recently increased",
+                    "Victims were all opposing conductor's authority"
+                ],
+                correctSuspectId: 1,
+                explanation: "The conductor poisoned the water bottles of musicians who opposed his authority. The temporary illness allowed him to replace them without suspicion while collecting on the tour insurance.",
+                solved: false
+            },
+            {
+                id: 27,
+                title: "The Quantum Lab Theft",
+                difficulty: "hard",
+                description: "A quantum computing prototype was stolen from a maximum security lab. The theft defies all physical security.",
+                timeline: [
+                    { time: "6:00 PM", event: "Lab secured for night" },
+                    { time: "10:30 PM", event: "Power fluctuation recorded" },
+                    { time: "11:00 PM", event: "Motion sensors triggered in lab" },
+                    { time: "11:30 PM", event: "Security finds prototype missing" },
+                    { time: "12:00 AM", event: "Government agencies notified" }
+                ],
+                suspects: [
+                    { id: 1, name: "Lead Scientist", relation: "Inventor of prototype", motive: "Sell to highest bidder", emoji: "👨‍🔬" },
+                    { id: 2, name: "Security Director", relation: "Designed lab security", motive: "Prove vulnerability for consulting business", emoji: "🛡️" },
+                    { id: 3, name: "Foreign Spy", relation: "Undercover as janitor", motive: "Technology transfer", emoji: "🕵️" },
+                    { id: 4, name: "Rival Company CEO", relation: "Tried to buy technology legally", motive: "Corporate espionage", emoji: "👨‍💼" },
+                    { id: 5, name: "Disgruntled Researcher", relation: "Credit stolen for invention", motive: "Revenge and profit", emoji: "👩‍💻" },
+                    { id: 6, name: "Government Agent", relation: "Wanted to 'lose' technology", motive: "False flag operation", emoji: "👔" }
+                ],
+                clues: [
+                    "Theft occurred during 30-second camera loop",
+                    "Prototype requires specialized knowledge to handle",
+                    "One suspect published paper on security vulnerabilities",
+                    "Blueprints of lab found in suspect's home",
+                    "Unusual energy signature detected during theft"
+                ],
+                correctSuspectId: 2,
+                explanation: "The security director stole his own design to prove its vulnerabilities and boost his consulting business. He created a 30-second camera loop and used his knowledge of blind spots.",
+                solved: false
+            },
+            {
+                id: 28,
+                title: "The Bilingual Blackmail",
+                difficulty: "hard",
+                description: "A UN diplomat is being blackmailed in two languages simultaneously. The demands show deep cultural knowledge.",
+                timeline: [
+                    { time: "9:00 AM", event: "First blackmail letter in French" },
+                    { time: "12:00 PM", event: "Second blackmail letter in Arabic" },
+                    { time: "3:00 PM", event: "Third communication in code" },
+                    { time: "6:00 PM", event: "$10 million demand" },
+                    { time: "9:00 PM", event: "Deadline set for midnight" }
+                ],
+                suspects: [
+                    { id: 1, name: "Translation Team Head", relation: "Speaks both languages fluently", motive: "Debt from gambling addiction", emoji: "🗣️" },
+                    { id: 2, name: "Cultural Attaché", relation: "Expert in both cultures", motive: "Fund rebel group in home country", emoji: "🎭" },
+                    { id: 3, name: "Diplomat's Assistant", relation: "Handles all correspondence", motive: "Resentment over mistreatment", emoji: "📋" },
+                    { id: 4, name: "Security Detail Lead", relation: "Overheard sensitive conversations", motive: "Early retirement fund", emoji: "🛡️" },
+                    { id: 5, name: "Journalist", relation: "Investigating diplomat", motive: "Story of the decade", emoji: "📰" },
+                    { id: 6, name: "Rival Diplomat", relation: "Competing for promotion", motive: "Destroy career of competitor", emoji: "👔" }
+                ],
+                clues: [
+                    "Blackmail letters use specific regional dialects",
+                    "Cultural references only insider would know",
+                    "One suspect visited blackmail drop location",
+                    "Payment instructions use banking knowledge",
+                    "Threats reference private conversations"
+                ],
+                correctSuspectId: 3,
+                explanation: "The diplomat's assistant used her position to learn sensitive information and cultural nuances. Resentful over poor treatment, she crafted perfect blackmail letters in both languages.",
+                solved: false
+            },
+            {
+                id: 29,
+                title: "The Chronological Murder",
+                difficulty: "hard",
+                description: "A historian was killed in a locked archive. The murder weapon appears from a different time period.",
+                timeline: [
+                    { time: "2:00 PM", event: "Historian enters archive alone" },
+                    { time: "3:30 PM", event: "Cleaner hears argument" },
+                    { time: "4:00 PM", event: "Historian found dead with antique dagger" },
+                    { time: "4:30 PM", event: "Police determine archive was locked from inside" },
+                    { time: "5:00 PM", event: "Dagger identified as 16th century original" }
+                ],
+                suspects: [
+                    { id: 1, name: "Rival Historian", relation: "Disputed victim's theory", motive: "Academic glory", emoji: "👨‍🏫" },
+                    { id: 2, name: "Museum Curator", relation: "Dagger was in museum collection", motive: "Cover up theft from collection", emoji: "🏛️" },
+                    { id: 3, name: "Antique Dealer", relation: "Sold dagger to victim", motive: "Silence about forgery ring", emoji: "🛒" },
+                    { id: 4, name: "Victim's Student", relation: "Stolen research credit", motive: "Revenge and degree", emoji: "🧑‍🎓" },
+                    { id: 5, name: "Archive Security", relation: "Only other keyholder", motive: "Victim discovered embezzlement", emoji: "🔑" },
+                    { id: 6, name: "Historical Reenactor", relation: "Expert in antique weapons", motive: "Obsession with historical accuracy", emoji: "⚔️" }
+                ],
+                clues: [
+                    "Archive has secret entrance from adjacent building",
+                    "Dagger was reported stolen month earlier",
+                    "One suspect specializes in lock mechanisms",
+                    "Victim was about to expose artifact forgery ring",
+                    "Secret correspondence about 'historical justice'"
+                ],
+                correctSuspectId: 3,
+                explanation: "The antique dealer used a secret entrance to the archive and killed the historian with the stolen dagger to prevent exposure of his forgery ring. He specialized in lock mechanisms and historical weapons.",
+                solved: false
+            },
+            {
+                id: 30,
+                title: "The Mirror Gallery Heist",
+                difficulty: "hard",
+                description: "A diamond necklace disappeared from a mirrored gallery during a charity event. Dozens of witnesses saw nothing.",
+                timeline: [
+                    { time: "7:00 PM", event: "Necklace displayed in center of mirror gallery" },
+                    { time: "8:30 PM", event: "Magician performs distraction act" },
+                    { time: "8:45 PM", event: "Lights dim for 30 seconds" },
+                    { time: "9:00 PM", event: "Necklace discovered missing" },
+                    { time: "9:15 PM", event: "All guests searched, necklace not found" }
+                ],
+                suspects: [
+                    { id: 1, name: "Magician", relation: "Created distraction", motive: "Prove he can steal anything", emoji: "🎩" },
+                    { id: 2, name: "Gallery Owner", relation: "Insurance fraud suspect", motive: "Financial difficulties", emoji: "🏛️" },
+                    { id: 3, name: "Lighting Technician", relation: "Controlled dimming lights", motive: "Paid by collector", emoji: "💡" },
+                    { id: 4, name: "Socialite", relation: "Wanted necklace for herself", motive: "Status symbol obsession", emoji: "👩" },
+                    { id: 5, name: "Security Consultant", relation: "Designed gallery security", motive: "Prove mirrors create blind spots", emoji: "🛡️" },
+                    { id: 6, name: "Jewelry Designer", relation: "Made replica for switch", motive: "Prove original design was stolen", emoji: "💎" }
+                ],
+                clues: [
+                    "Mirrors were slightly rearranged before event",
+                    "Necklace was replaced with perfect replica",
+                    "One suspect studied optics and reflections",
+                    "Security camera feeds show conflicting angles",
+                    "Original necklace design patents disputed"
+                ],
+                correctSuspectId: 6,
+                explanation: "The jewelry designer replaced the necklace with a replica before the event to prove the gallery owner stole her design. She used her knowledge of optics and mirror placements to execute the switch unnoticed.",
+                solved: false
+            }
+        ];
+
+        // Game state management
+        let gameState = {
+            solvedCases: JSON.parse(localStorage.getItem('solvedCases')) || [],
+            currentFilter: 'all',
+            currentCaseId: null
+        };
+
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', function() {
+            createFloatingPoints();
+            initializeGame();
+        });
+
+        function initializeGame() {
+            updateStats();
+            renderMainMenu();
+            setupEventListeners();
+        }
+
+        // Update game statistics
+        function updateStats() {
+            const solvedCases = gameState.solvedCases.length;
+            const successRate = Math.round((solvedCases / crimeCases.length) * 100);
+            
+            document.getElementById('solvedCases').textContent = solvedCases;
+            document.getElementById('successRate').textContent = `${successRate}%`;
+        }
+
+        // Render main menu with case previews
+        function renderMainMenu() {
+            const container = document.getElementById('casesGrid');
+            container.innerHTML = '';
+            
+            const filteredCases = crimeCases.filter(caseItem => {
+                if (gameState.currentFilter === 'all') return true;
+                return caseItem.difficulty === gameState.currentFilter;
+            });
+            
+            filteredCases.forEach(caseItem => {
+                const isSolved = gameState.solvedCases.includes(caseItem.id);
+                
+                const caseCard = document.createElement('div');
+                caseCard.className = `case-preview-card ${isSolved ? 'solved' : ''}`;
+                caseCard.dataset.caseId = caseItem.id;
+                
+                caseCard.innerHTML = `
+                    <div class="case-number">
+                        <i class="fas fa-folder"></i> Case #${caseItem.id}
+                    </div>
+                    <div class="case-preview-title">
+                        ${caseItem.title}
+                    </div>
+                    <div class="case-preview-info">
+                        <span class="case-difficulty-preview ${caseItem.difficulty}">
+                            ${caseItem.difficulty}
+                        </span>
+                        ${isSolved ? 
+                            '<span class="solved-indicator"><i class="fas fa-check-circle"></i> Solved</span>' : 
+                            '<span class="solved-indicator"><i class="fas fa-question-circle"></i> Unsolved</span>'
+                        }
+                    </div>
+                `;
+                
+                // Add click event to open case details
+                caseCard.addEventListener('click', function() {
+                    openCaseDetail(caseItem.id);
+                });
+                
+                container.appendChild(caseCard);
+            });
+        }
+
+        // Open case detail view
+        function openCaseDetail(caseId) {
+            const caseItem = crimeCases.find(c => c.id === caseId);
+            if (!caseItem) return;
+            
+            gameState.currentCaseId = caseId;
+            
+            // Hide main menu, show detail view
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('caseDetailView').style.display = 'block';
+            
+            // Render case details
+            renderCaseDetail(caseItem);
+        }
+
+        // Render case detail view
+        function renderCaseDetail(caseItem) {
+            const isSolved = gameState.solvedCases.includes(caseItem.id);
+            const container = document.getElementById('caseDetailCard');
+            
+            // Create timeline HTML
+            const timelineHTML = caseItem.timeline.map(item => `
+                <div class="timeline-item">
+                    <div class="timeline-time">${item.time}</div>
+                    <div class="timeline-event">${item.event}</div>
+                </div>
+            `).join('');
+            
+            // Create suspects HTML
+            const suspectsHTML = caseItem.suspects.map(suspect => `
+                <div class="suspect" data-suspect-id="${suspect.id}">
+                    <div class="suspect-emoji">${suspect.emoji}</div>
+                    <div class="suspect-info">
+                        <h4>${suspect.name}</h4>
+                        <p>${suspect.relation} - ${suspect.motive}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.className = `case-detail-card ${isSolved ? 'solved' : ''}`;
+            container.innerHTML = `
+                <div class="case-header">
+                    <div class="case-title">
+                        <h2>Case ${caseItem.id}: ${caseItem.title}</h2>
+                        <span class="case-difficulty ${caseItem.difficulty}">${caseItem.difficulty}</span>
+                    </div>
+                    <p class="case-description">${caseItem.description}</p>
+                    ${isSolved ? '<div class="solved-badge"><i class="fas fa-check"></i> Case Solved</div>' : ''}
+                </div>
+                
+                <div class="case-body">
+                    <div class="case-section">
+                        <div class="section-title">
+                            <i class="fas fa-clock"></i> Timeline of Events
+                        </div>
+                        <div class="timeline">
+                            ${timelineHTML}
+                        </div>
+                    </div>
+                    
+                    <div class="case-section">
+                        <div class="section-title">
+                            <i class="fas fa-user-secret"></i> Suspects
+                        </div>
+                        <div class="suspects-grid">
+                            ${suspectsHTML}
+                        </div>
+                    </div>
+                    
+                    <div class="case-section">
+                        <div class="section-title">
+                            <i class="fas fa-search"></i> Clues
+                        </div>
+                        <div class="clues-section">
+                            <div class="clue-counter">
+                                <span>Clues Revealed: <span class="clues-count">0/5</span></span>
+                                <span class="clues-remaining">5 clues remaining</span>
+                            </div>
+                            <div class="clues-revealed" id="clues-container">
+                                <!-- Clues will appear here as revealed -->
+                            </div>
+                            <div class="case-actions">
+                                <button class="btn btn-clue" id="reveal-clue-btn">
+                                    <i class="fas fa-eye"></i> Reveal Clue
+                                </button>
+                                <button class="btn btn-solve" id="submit-solution-btn" disabled>
+                                    <i class="fas fa-user-check"></i> Submit Solution
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-section" id="result-container">
+                        <!-- Results will appear here -->
+                    </div>
+                </div>
+            `;
+            
+            // Set up event listeners for this case
+            setupCaseDetailListeners(caseItem);
+        }
+
+        // Set up event listeners for case detail view
+        function setupCaseDetailListeners(caseItem) {
+            const caseId = caseItem.id;
+            const isSolved = gameState.solvedCases.includes(caseId);
+            
+            // Clue button
+            const clueBtn = document.getElementById('reveal-clue-btn');
+            const solveBtn = document.getElementById('submit-solution-btn');
+            const cluesContainer = document.getElementById('clues-container');
+            const cluesCount = document.querySelector('.clues-count');
+            const cluesRemaining = document.querySelector('.clues-remaining');
+            
+            let revealedClues = 0;
+            const maxClues = 5;
+            
+            // Load previously revealed clues from localStorage
+            const caseCluesKey = `case_${caseId}_clues`;
+            const savedClues = JSON.parse(localStorage.getItem(caseCluesKey)) || [];
+            revealedClues = savedClues.length;
+            
+            // Display saved clues
+            savedClues.forEach((clueText, index) => {
+                const clueItem = document.createElement('div');
+                clueItem.className = 'clue-item';
+                clueItem.textContent = `Clue ${index + 1}: ${clueText}`;
+                cluesContainer.appendChild(clueItem);
+            });
+            
+            // Update counters
+            cluesCount.textContent = `${revealedClues}/${maxClues}`;
+            cluesRemaining.textContent = `${maxClues - revealedClues} clues remaining`;
+            
+            // Disable clue button if all clues revealed or case solved
+            if (revealedClues >= maxClues || isSolved) {
+                clueBtn.disabled = true;
+                clueBtn.innerHTML = '<i class="fas fa-ban"></i> No More Clues';
+            }
+            
+            // Clue button click
+            clueBtn.addEventListener('click', function() {
+                if (revealedClues >= maxClues || isSolved) return;
+                
+                // Add the next clue
+                const clueItem = document.createElement('div');
+                clueItem.className = 'clue-item';
+                clueItem.textContent = `Clue ${revealedClues + 1}: ${caseItem.clues[revealedClues]}`;
+                cluesContainer.appendChild(clueItem);
+                
+                // Save to localStorage
+                savedClues.push(caseItem.clues[revealedClues]);
+                localStorage.setItem(caseCluesKey, JSON.stringify(savedClues));
+                
+                revealedClues++;
+                
+                // Update counters
+                cluesCount.textContent = `${revealedClues}/${maxClues}`;
+                cluesRemaining.textContent = `${maxClues - revealedClues} clues remaining`;
+                
+                // Disable button if all clues revealed
+                if (revealedClues >= maxClues) {
+                    clueBtn.disabled = true;
+                    clueBtn.innerHTML = '<i class="fas fa-ban"></i> No More Clues';
+                }
+                
+                // Visual feedback
+                clueBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Revealing...';
+                setTimeout(() => {
+                    clueBtn.innerHTML = '<i class="fas fa-eye"></i> Reveal Clue';
+                }, 300);
+            });
+            
+            // Suspect selection
+            document.querySelectorAll('.suspect').forEach(suspect => {
+                suspect.addEventListener('click', function() {
+                    if (isSolved) return;
+                    
+                    // Remove selection from all suspects
+                    document.querySelectorAll('.suspect').forEach(s => s.classList.remove('selected'));
+                    
+                    // Select this suspect
+                    this.classList.add('selected');
+                    
+                    // Enable solve button
+                    solveBtn.disabled = false;
+                });
+            });
+            
+            // Solve button click
+            solveBtn.addEventListener('click', function() {
+                if (isSolved) return;
+                
+                const selectedSuspect = document.querySelector('.suspect.selected');
+                if (!selectedSuspect) {
+                    alert('Please select a suspect first!');
+                    return;
+                }
+                
+                const selectedSuspectId = parseInt(selectedSuspect.dataset.suspectId);
+                const isCorrect = selectedSuspectId === caseItem.correctSuspectId;
+                
+                // Show result
+                const resultContainer = document.getElementById('result-container');
+                resultContainer.className = `result-section show ${isCorrect ? 'result-correct' : 'result-incorrect'}`;
+                
+                const correctSuspect = caseItem.suspects.find(s => s.id === caseItem.correctSuspectId);
+                const selectedSuspectName = caseItem.suspects.find(s => s.id === selectedSuspectId).name;
+                
+                if (isCorrect) {
+                    resultContainer.innerHTML = `
+                        <div class="result-title correct">
+                            <i class="fas fa-check-circle"></i> CORRECT!
+                        </div>
+                        <div class="result-explanation">
+                            <p><strong>You've identified the culprit!</strong></p>
+                            <p>${caseItem.explanation}</p>
+                        </div>
+                        <div class="final-clue">
+                            <p><i class="fas fa-lightbulb"></i> <strong>Case Solved:</strong> The evidence clearly points to ${correctSuspect.name} as the perpetrator.</p>
+                        </div>
+                    `;
+                    
+                    // Mark case as solved
+                    if (!gameState.solvedCases.includes(caseId)) {
+                        gameState.solvedCases.push(caseId);
+                        localStorage.setItem('solvedCases', JSON.stringify(gameState.solvedCases));
+                        updateStats();
+                        
+                        // Update UI
+                        document.querySelector('.case-detail-card').classList.add('solved');
+                        if (!document.querySelector('.solved-badge')) {
+                            const badge = document.createElement('div');
+                            badge.className = 'solved-badge';
+                            badge.innerHTML = '<i class="fas fa-check"></i> Case Solved';
+                            document.querySelector('.case-header').appendChild(badge);
+                        }
+                    }
+                } else {
+                    resultContainer.innerHTML = `
+                        <div class="result-title incorrect">
+                            <i class="fas fa-times-circle"></i> INCORRECT, BUT CLOSE
+                        </div>
+                        <div class="result-explanation">
+                            <p><strong>That's not quite right, but you're getting warm.</strong></p>
+                            <p>${selectedSuspectName} had motive and opportunity, but the evidence doesn't quite match.</p>
+                        </div>
+                        <div class="final-clue">
+                            <p><i class="fas fa-lightbulb"></i> <strong>Final Clue:</strong> ${caseItem.clues[4]}</p>
+                        </div>
+                    `;
+                }
+                
+                // Disable buttons
+                clueBtn.disabled = true;
+                solveBtn.disabled = true;
+                
+                // Scroll to result
+                resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        }
+
+        // Set up global event listeners
+        function setupEventListeners() {
+            // Back button
+            document.getElementById('backToMenu').addEventListener('click', function() {
+                document.getElementById('caseDetailView').style.display = 'none';
+                document.getElementById('mainMenu').style.display = 'block';
+                renderMainMenu();
+            });
+            
+            // Difficulty filter buttons
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active button
+                    document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update filter and re-render
+                    gameState.currentFilter = this.dataset.difficulty;
+                    renderMainMenu();
+                });
+            });
+        }
+    </script>
+</body>
+</html>
